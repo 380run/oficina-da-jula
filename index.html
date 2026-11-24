@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Oficina da Jula</title>
+<meta name="description" content="Desmonte a caminhonete Jula em 3D e descubra para que serve cada peça. Para crianças que leram o livro Jula: quase tudo tem conserto.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@800;900&family=Literata:opsz,wght@7..72,400;7..72,600;7..72,700&display=swap" rel="stylesheet">
+<style>
+/* VOICE: brincalhão e claro, para crianças de 7 a 10 anos que leram o livro da Jula
+   IDEA: uma bancada de oficina ao ar livre no sertão baiano, onde a Jula se desmonta peça por peça
+   PICTURE: a C10 em 3D pintada à mão, com vista explodida, linhas-guia e etiquetas
+   COLOUR and TYPE: céu azul, terra batida, vermelho Jula #c4161c, tinta #2a211b; Big Shoulders + Literata
+   LAYOUT: palco 3D grande; trilho de peças logo abaixo (ao alcance do polegar); ficha com Anterior/Próxima */
+:root{color-scheme:light dark;--bg:light-dark(#faf6ee,#1b1613);--ink:light-dark(#2a211b,#f3ece2);--muted:light-dark(#6f6458,#b5aa9c);--red:#c4161c;--red2:#a30f14;--card:light-dark(#fff,#262019);--line:light-dark(#e8dfd1,#3a3129);--soft:light-dark(#fbf1dc,#33281f);--ok:#2e7d32}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.55 Literata,Georgia,serif;overflow-x:clip}
+.wrap{max-width:1240px;margin:auto;padding:0 max(4vw,14px)}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:14px 0 10px}
+h1{font:900 clamp(32px,6vw,50px)/1 "Big Shoulders Display",Impact,sans-serif;margin:0;color:var(--red)}
+.sub{margin:2px 0 0;color:var(--muted);font-size:15px}
+.prog{display:flex;align-items:center;gap:10px;font-size:14px;color:var(--muted)}
+.bar{width:110px;height:10px;border-radius:99px;background:var(--line);overflow:hidden}.bar i{display:block;height:100%;width:0;background:var(--ok);transition:width .4s}
+.grid{display:grid;grid-template-columns:minmax(0,1fr);gap:14px;padding-bottom:24px}
+@media(min-width:960px){.grid{grid-template-columns:minmax(0,1.65fr) minmax(0,1fr);align-items:start}.side{position:sticky;top:12px}}
+.stage{position:relative;height:min(64vh,580px);min-height:330px;border-radius:22px;overflow:hidden;background:linear-gradient(#78b2e3 0%,#a8d2ef 42%,#e3efe1 66%,#f3e3bf 100%);touch-action:none;cursor:grab;user-select:none;box-shadow:0 1px 0 var(--line),0 10px 30px -18px #000a}
+.stage:active{cursor:grabbing}
+.stage canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.cloud{position:absolute;background:#fff;border-radius:999px;opacity:.95}
+.cloud::before,.cloud::after{content:"";position:absolute;background:#fff;border-radius:50%}
+.cloud::before{width:55%;height:150%;left:15%;bottom:20%}.cloud::after{width:40%;height:120%;right:12%;bottom:25%}
+.c1{width:150px;height:44px;top:12%;left:-20%;animation:drift 70s linear infinite}
+.c2{width:110px;height:34px;top:24%;left:-30%;animation:drift 95s linear infinite -30s;opacity:.85}
+.c3{width:190px;height:52px;top:5%;left:-40%;animation:drift 120s linear infinite -70s;opacity:.9}
+@keyframes drift{to{transform:translateX(160vw)}}
+.load{position:absolute;inset:0;display:grid;place-items:center;font-weight:600;color:#2a211b;background:#f3e3bfcc;transition:opacity .4s}
+.load.gone{opacity:0;pointer-events:none}
+.labels{position:absolute;inset:0;pointer-events:none}
+.lbl{position:absolute;left:0;top:0;pointer-events:auto;font:700 13px/1 Literata,Georgia,serif;background:#fffdf7;color:#2a211b;border:2px solid #3a2a22;border-radius:99px;padding:6px 10px 6px 6px;white-space:nowrap;cursor:pointer;opacity:0;transition:opacity .25s;display:flex;align-items:center;gap:6px;box-shadow:0 3px 0 #3a2a2233}
+.lbl b{display:grid;place-items:center;width:20px;height:20px;border-radius:50%;background:var(--red);color:#fff;font-size:11px}
+.lbl.on{background:var(--red);border-color:var(--red2);color:#fff}.lbl.on b{background:#fff;color:var(--red)}
+.top{position:absolute;left:10px;right:10px;top:10px;display:flex;justify-content:space-between;gap:8px;pointer-events:none}
+.top>*{pointer-events:auto}
+.seg{display:flex;background:#fffdf7;border:2px solid #3a2a22;border-radius:99px;padding:3px;gap:2px}
+.seg button{border:0;min-height:38px;padding:6px 14px;background:transparent;color:#2a211b;border-radius:99px}
+.seg button[aria-pressed=true]{background:var(--red);color:#fff}
+.icons{display:flex;gap:8px}
+.ib{width:44px;height:44px;padding:0;display:grid;place-items:center;background:#fffdf7;color:#2a211b;border:2px solid #3a2a22;border-radius:50%}
+.ib svg{width:22px;height:22px}
+.ib[aria-pressed=true]{background:#2a211b;color:#fffdf7}
+.hint{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);display:flex;align-items:center;gap:8px;font-size:14px;color:#2a211b;background:#fffdf7e6;padding:6px 14px;border-radius:99px;transition:opacity .5s;pointer-events:none;white-space:nowrap}
+.hint svg{width:22px;height:22px;animation:swipe 1.6s ease-in-out infinite}
+@keyframes swipe{50%{transform:translateX(10px)}}
+.hint.gone{opacity:0}
+.quiz{position:absolute;left:50%;top:64px;transform:translateX(-50%);background:#fffdf7;color:#2a211b;border:3px solid var(--red);border-radius:16px;padding:10px 16px;font-weight:700;display:none;text-align:center;max-width:92%;box-shadow:0 6px 0 #3a2a2222}
+.quiz.show{display:block}.quiz.good{border-color:var(--ok);color:var(--ok)}
+.quiz small{display:block;font-weight:400;color:#6f6458;font-size:13px}
+.strip{display:flex;gap:8px;overflow-x:auto;scroll-snap-type:x mandatory;padding:4px 2px 8px;margin-top:10px;scrollbar-width:thin}
+.chip{flex:none;scroll-snap-align:start;display:flex;align-items:center;gap:8px;font:600 15px Literata,Georgia,serif;min-height:46px;padding:6px 14px 6px 6px;border-radius:99px;border:2px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer}
+.chip .n{display:grid;place-items:center;width:30px;height:30px;border-radius:50%;background:var(--soft);font-weight:700;font-size:14px}
+.chip.seen .n{background:var(--ok);color:#fff}
+.chip[aria-pressed=true]{border-color:var(--red);background:var(--red);color:#fff}.chip[aria-pressed=true] .n{background:#fff;color:var(--red)}
+@media(min-width:960px){.side .strip{flex-wrap:wrap;overflow:visible;margin:0 0 12px}}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:20px 20px 16px}
+.eyebrow{font-size:14px;color:var(--muted);margin:0 0 2px}
+.panel h2{font:900 clamp(32px,5vw,46px)/1.02 "Big Shoulders Display",Impact,sans-serif;margin:0 0 10px;color:var(--red)}
+.panel p{margin:0 0 12px;font-size:18px}
+.fact{display:flex;gap:10px;font-size:16px;background:var(--soft);border-radius:14px;padding:12px;margin:0 0 12px}
+.fact svg{flex:none;width:22px;height:22px;color:var(--red);margin-top:2px}
+.where{font-size:15px;color:var(--muted)}
+.actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:6px}
+button{font:600 16px Literata,Georgia,serif;min-height:44px;padding:8px 16px;border-radius:99px;border:2px solid var(--line);background:var(--bg);color:var(--ink);cursor:pointer}
+button:focus-visible,.lbl:focus-visible,.chip:focus-visible{outline:3px solid #1f6feb;outline-offset:2px}
+.play{display:flex;align-items:center;gap:8px;background:var(--red);border-color:var(--red);color:#fff;padding-left:12px}
+.play svg{width:22px;height:22px}
+.nav{margin-left:auto;display:flex;gap:8px}
+.nav button{width:46px;padding:0;display:grid;place-items:center}.nav svg{width:20px;height:20px}
+.nogl{position:absolute;inset:0;display:none;place-items:center;text-align:center;padding:20px;color:#4a3f35;background:#f3e3bf}
+.stage.fail .nogl{display:grid}.stage.fail .top,.stage.fail .hint,.stage.fail .load{display:none}
+footer{text-align:center;color:var(--muted);font-size:14px;padding:0 16px 24px}
+footer a{color:var(--red)}
+@media(max-width:600px){.lbl{font-size:12px;padding:4px 8px 4px 4px}.lbl b{width:18px;height:18px;font-size:10px}.seg button{padding:6px 10px;font-size:15px}}
+@media(prefers-reduced-motion:reduce){.cloud{animation:none;left:10%}.hint svg{animation:none}.bar i{transition:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div><h1>Oficina da Jula</h1><p class="sub">Desmonte a caminhonete e descubra para que serve cada peça.</p></div>
+    <div class="prog" aria-live="polite"><span id="progt">0 de 10 peças descobertas</span><span class="bar"><i id="progb"></i></span></div>
+  </header>
+  <div class="grid">
+    <div>
+      <div class="stage" id="stage" aria-label="Modelo 3D da caminhonete Jula">
+        <span class="cloud c1"></span><span class="cloud c2"></span><span class="cloud c3"></span>
+        <canvas id="cv"></canvas>
+        <div class="labels" id="labels"></div>
+        <div class="top">
+          <div class="seg" role="group" aria-label="Vista">
+            <button type="button" id="vMont" aria-pressed="true">Montada</button>
+            <button type="button" id="vDesm" aria-pressed="false">Desmontada</button>
+          </div>
+          <div class="icons">
+            <button class="ib" type="button" id="game" aria-pressed="false" aria-label="Brincar: ache a peça" title="Brincar: ache a peça"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/><path d="M11 8v3l2 2"/></svg></button>
+            <button class="ib" type="button" id="home" aria-label="Voltar à vista inicial" title="Voltar à vista inicial"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg></button>
+          </div>
+        </div>
+        <div class="quiz" id="quiz" role="status"></div>
+        <div class="hint" id="hint"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11V5a2 2 0 0 1 4 0v6"/><path d="M13 9a2 2 0 0 1 4 0v4a6 6 0 0 1-6 6h-1a5 5 0 0 1-4-2l-2.5-3.5a1.8 1.8 0 0 1 2.8-2.2L9 13"/></svg>Arraste para girar · toque numa peça</div>
+        <div class="load" id="load">Abrindo a oficina…</div>
+        <div class="nogl">Seu aparelho não conseguiu abrir o 3D. As explicações das peças continuam aqui embaixo.</div>
+      </div>
+      <nav class="strip" id="strip" aria-label="Peças"></nav>
+    </div>
+    <div class="side">
+      <section class="panel" aria-live="polite">
+        <p class="eyebrow" id="pnum">Bem-vindo à oficina</p>
+        <h2 id="pname">A Jula por dentro</h2>
+        <p id="ptext"></p>
+        <p class="fact"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"/></svg><span id="pfact"></span></p>
+        <p class="where" id="pwhere"></p>
+        <div class="actions">
+          <button class="play" id="listen" type="button"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg><span>Ouvir</span></button>
+          <div class="nav">
+            <button type="button" id="prev" aria-label="Peça anterior"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+            <button type="button" id="next" aria-label="Próxima peça"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg></button>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+</div>
+<footer>Modelo ilustrativo, fora de escala · Livro <i>Jula: quase tudo tem conserto</i> · <a href="https://www.julathetruck.com.br/">julathetruck.com.br</a></footer>
+
+<script src="js/three.min.js"></script>
+<script>
+{
+/* ------------------------------------------------------------------ conteúdo */
+const INTRO = {name:"A Jula por dentro",
+  text:"A Jula é uma caminhonete C10 de 1977. Toque em “Desmontada” para ver as peças separadas, ou comece pela primeira peça com a seta.",
+  fact:"A Jula ficou anos parada debaixo de uma lona até ser consertada pela família.",
+  where:"Cada peça do livro tem um QR code que abre direto aqui.",
+  say:"Oi! Eu sou a Jula, uma caminhonete de mil novecentos e setenta e sete. Fiquei anos dormindo debaixo de uma lona, até a família me consertar. Quer ver como eu sou por dentro? Toque em desmontada, ou escolha uma peça, que eu te conto pra que ela serve!"};
+const PARTS = {
+  carroceria:{name:"Cabine e caçamba", text:"É a parte de fora: a cabine, onde a gente senta, o capô, que cobre o motor, e a caçamba, onde vai a carga.", fact:"Na restauração, a lataria enferrujada ganhou chapa nova, primer cinza e tinta vermelha.", where:"É o que a gente vê de fora.",
+    say:"Essa é a parte que todo mundo vê: a cabine, o capô e a caçamba! Na cabine a gente senta e dirige. O capô cobre o motor, como uma tampa. E a caçamba leva tudo: cestas, cabras e até a família inteira pra feira! Quando a Jula estava enferrujada, essa parte ganhou chapa nova e tinta vermelhinha."},
+  chassi:{name:"Chassi", text:"É o esqueleto da caminhonete. Duas vigas compridas de ferro seguram tudo: motor, cabine, caçamba e rodas.", fact:"Na Jula, o chassi estava bom. Foi isso que fez a restauração valer a pena!", where:"Fica embaixo de tudo, de ponta a ponta.",
+    say:"Olha só, esse aqui é o chassi! Ele é o esqueleto da Jula. São duas vigas compridas de ferro, de uma ponta à outra. E sabe o que elas fazem? Seguram tudo: o motor, a cabine, a caçamba e as rodas. Sem o chassi, a caminhonete desmontava inteirinha!"},
+  motor:{name:"Motor", text:"Aqui dentro moram seis pistões em fila. Uma faísca acende o combustível, a explosãozinha empurra o pistão, e esse empurrão vira o giro que faz as rodas andarem. Repare: a tampa se abre e dá para ver os pistões subindo e descendo, girando o virabrequim lá embaixo.", fact:"O motor da Jula se chama 261 e tem seis cilindros em linha.", where:"Fica na frente, debaixo do capô.",
+    say:"Agora vem a parte mais animada: o motor! Lá dentro moram seis pistões, um atrás do outro, numa fila. Uma faísca acende o combustível... e pof! A explosãozinha empurra o pistão. Esse empurrão vira giro, e o giro faz as rodas andarem. Milhares de vezes por minuto!"},
+  radiador:{name:"Radiador", text:"É a grade cheia de furinhos. A água leva o calor do motor até aqui, o vento atravessa os furinhos e esfria a água.", fact:"É igualzinho você soprando a sopa quente!", where:"Fica bem na frente do motor.",
+    say:"Tá vendo essa grade cheia de furinhos? É o radiador. O motor trabalha tanto que esquenta, né? Então uma água passa por dentro dele, leva o calor embora e vem pra cá. O vento atravessa os furinhos e esfria a água. É igualzinho você soprando a sopa quente!"},
+  bateria:{name:"Bateria", text:"É como uma caixa-d'água, só que de energia. Ela guarda eletricidade para dar a partida e acender os faróis.", fact:"Parada muito tempo, a bateria da Jula secou. Por isso ela não ligava!", where:"Fica no cofre do motor, de lado.",
+    say:"Essa caixinha preta é a bateria. Pense numa caixa d'água... só que, em vez de água, ela guarda energia. É dela que vem a força pra dar a partida e acender os faróis. Quando a Jula ficou parada muito tempo, a bateria secou. Por isso ela não ligava!"},
+  farol:{name:"Faróis", text:"São os olhos da Jula. A energia da bateria chega por fios até as lâmpadas.", fact:"Um fio partido por dentro deixou o farol apagado. O Seu Zito trocou o fio e a Jula abriu os olhos!", where:"Ficam na frente, um de cada lado da grade.",
+    say:"E esses aqui são os faróis, os olhos da Jula! A energia sai da bateria e vai por fios até as lâmpadas. Lembra quando o farol não acendia? Era um fio partido por dentro. O Seu Zito trocou o fio, e a Jula abriu os olhos de novo!"},
+  retrovisor:{name:"Retrovisores", text:"São os espelhos dos lados da cabine. Eles mostram o que vem atrás, para quem dirige ver sem virar a cabeça.", fact:"Antes de dar ré ou mudar de lado na estrada, o motorista sempre espia no retrovisor. Segurança em primeiro lugar!", where:"Ficam nas portas, um de cada lado da cabine.",
+    say:"Olha esses espelhinhos dos lados da cabine: são os retrovisores! Eles funcionam como olhos nas costas. Quem dirige olha neles pra ver o que vem atrás, sem precisar virar a cabeça. Antes de dar ré ou mudar de lado na estrada, o motorista sempre espia no retrovisor. Segurança em primeiro lugar!"},
+  eixo:{name:"Cardã e diferencial", text:"O cardã é um cano comprido que leva o giro do motor até a traseira. O diferencial divide esse giro entre as duas rodas de trás.", fact:"Nas curvas, uma roda precisa girar mais que a outra. Quem resolve isso é o diferencial!", where:"Fica embaixo, do meio até as rodas de trás.",
+    say:"Sabe como a força do motor chega lá atrás? Por esse cano comprido, o cardã! Ele gira, gira, e leva a força até o diferencial, essa bola no meio do eixo. O diferencial divide o giro entre as duas rodas de trás. E tem um segredo: na curva, uma roda precisa andar mais que a outra, e é o diferencial que ajeita isso!"},
+  freio:{name:"Freio a disco", text:"Quando o pé aperta o pedal, duas pastilhas apertam um disco que gira com a roda, como dedos segurando um pião.", fact:"Na restauração, a Jula ganhou freio a disco nas rodas da frente.", where:"Fica atrás das rodas da frente.",
+    say:"Agora, a parte mais importante. Andar é bom, mas parar é obrigatório! Esse é o freio a disco. Quando o pé aperta o pedal, duas pastilhas apertam um disco que gira junto com a roda. É como seus dedos segurando um pião pra ele parar de rodar."},
+  rodas:{name:"Rodas e pneus", text:"As rodas giram e levam a Jula para a frente. O pneu de borracha segura o chão e amortece os buracos da estrada.", fact:"São quatro rodas. As de trás recebem a força do motor.", where:"Duas na frente, duas atrás.",
+    say:"E pra terminar, as rodas! Elas giram e levam a Jula pra frente. Em volta de cada roda tem um pneu de borracha, que segura bem no chão e deixa a viagem macia, mesmo na estrada de terra cheia de buraco. Na Jula, são as rodas de trás que recebem a força do motor."}
+};
+const ORDER = Object.keys(PARTS);
+const $ = id => document.getElementById(id);
+
+/* ------------------------------------------------------------------ progresso */
+// cada visita começa do zero: a descoberta fica só na memória da página
+const seen = new Set();
+try{ localStorage.removeItem('jula-oficina-vistas'); }catch(e){}
+function markSeen(k){ if(!PARTS[k]) return; seen.add(k); paintProgress(); }
+function paintProgress(){
+  $('progt').textContent = seen.size === ORDER.length ? `Você descobriu as ${ORDER.length} peças!` : `${seen.size} de ${ORDER.length} peças descobertas`;
+  $('progb').style.width = (seen.size/ORDER.length*100) + '%';
+  document.querySelectorAll('.chip').forEach(c => c.classList.toggle('seen', seen.has(c.dataset.k)));
+}
+
+/* ------------------------------------------------------------------ interface */
+$('strip').innerHTML = ORDER.map((k,i) => `<button class="chip" type="button" data-k="${k}" aria-pressed="false"><span class="n">${i+1}</span>${PARTS[k].name}</button>`).join('');
+let three = null;
+try { three = initThree(); } catch (e) { console.error(e); $('stage').classList.add('fail'); }
+
+function show(k){
+  const p = PARTS[k] || INTRO, i = ORDER.indexOf(k);
+  $('pnum').textContent = i >= 0 ? `Peça ${i+1} de ${ORDER.length}` : 'Bem-vindo à oficina';
+  $('pname').textContent = p.name; $('ptext').textContent = p.text; $('pfact').textContent = p.fact; $('pwhere').textContent = p.where;
+  document.querySelectorAll('.chip').forEach(b => b.setAttribute('aria-pressed', b.dataset.k === k ? 'true' : 'false'));
+  const on = document.querySelector(`.chip[data-k="${k}"]`); if(on) on.scrollIntoView({block:'nearest', inline:'center', behavior:'smooth'});
+  if(three) three.focus(PARTS[k] ? k : null);
+  markSeen(k);
+}
+function choose(k){ if(location.hash !== '#'+k) location.hash = k; else show(k); }
+function step(d){ const i = ORDER.indexOf(location.hash.slice(1)); choose(ORDER[(i + d + ORDER.length*2) % ORDER.length] || ORDER[0]); }
+$('strip').addEventListener('click', e => { const b = e.target.closest('.chip'); if(b) choose(b.dataset.k); });
+$('prev').addEventListener('click', () => step(-1));
+$('next').addEventListener('click', () => step(location.hash.slice(1) ? 1 : 0));
+addEventListener('keydown', e => { if(e.target.closest('input,textarea')) return; if(e.key === 'ArrowRight') step(1); if(e.key === 'ArrowLeft') step(-1); });
+addEventListener('hashchange', () => { stopVoice(); show(location.hash.slice(1)); });
+function setExploded(on){ if(three) three.setExplode(on); $('vMont').setAttribute('aria-pressed', !on); $('vDesm').setAttribute('aria-pressed', on); }
+$('vMont').addEventListener('click', () => setExploded(false));
+$('vDesm').addEventListener('click', () => setExploded(true));
+$('home').addEventListener('click', () => { if(location.hash) history.replaceState(null, '', location.pathname + location.search); stopVoice(); show(''); setExploded(false); });
+
+/* ------------------------------------------------------------------ voz
+   1) gravações em audio/<peça>.mp3 (veja roteiros.md); 2) se faltar, a melhor voz pt-BR do aparelho */
+const HAS = {};
+if(location.protocol.startsWith('http')) ['intro', ...ORDER].forEach(k => fetch('audio/'+k+'.mp3', {method:'HEAD'}).then(r => { HAS[k] = r.ok && /audio|mpeg|octet/.test(r.headers.get('content-type')||'audio'); }).catch(()=>{}));
+let voice = null, speaking = false, audioEl = null;
+function pickVoice(){
+  try{
+    const all = speechSynthesis.getVoices(), br = all.filter(v => /^pt[-_]?BR/i.test(v.lang)), pool = br.length ? br : all.filter(v => /^pt/i.test(v.lang));
+    const score = v => (/natural|neural|online|premium|enhanced/i.test(v.name) ? 30 : 0) + (/google/i.test(v.name) ? 10 : 0) + (v.localService ? 0 : 3);
+    voice = pool.sort((a,b) => score(b) - score(a))[0] || null;
+  }catch(e){}
+}
+try{ pickVoice(); speechSynthesis.onvoiceschanged = pickVoice; }catch(e){}
+const PLAY = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg><span>Ouvir</span>';
+const STOP = '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="2"/></svg><span>Parar</span>';
+function stopVoice(){ speaking = false; try{ speechSynthesis.cancel(); }catch(e){} if(audioEl){ audioEl.pause(); audioEl = null; } $('listen').innerHTML = PLAY; }
+function speak(text){
+  const parts = text.match(/[^.!?…]+[.!?…]*/g) || [text]; let i = 0;
+  const next = () => {
+    if(!speaking || i >= parts.length){ stopVoice(); return; }
+    const p = parts[i++].trim(); if(!p){ next(); return; }
+    const u = new SpeechSynthesisUtterance(p); u.lang = 'pt-BR'; if(voice) u.voice = voice;
+    u.rate = /[!?]$/.test(p) ? 1.0 : .92; u.pitch = /!$/.test(p) ? 1.15 : (/\?$/.test(p) ? 1.1 : 1.02);
+    u.onend = () => setTimeout(next, 220); u.onerror = stopVoice; speechSynthesis.speak(u);
+  };
+  next();
+}
+$('listen').addEventListener('click', () => {
+  if(speaking){ stopVoice(); return; }
+  const k = location.hash.slice(1), key = PARTS[k] ? k : 'intro', text = (PARTS[k] || INTRO).say;
+  speaking = true; $('listen').innerHTML = STOP;
+  if(HAS[key]){ audioEl = new Audio('audio/'+key+'.mp3'); audioEl.onended = stopVoice; audioEl.play().catch(stopVoice); return; }
+  try{ speak(text); }catch(e){ stopVoice(); }
+});
+
+/* ------------------------------------------------------------------ brincadeira */
+let quiz = null, score = 0;
+$('game').addEventListener('click', () => {
+  if(quiz){ quiz = null; $('quiz').className = 'quiz'; $('game').setAttribute('aria-pressed','false'); return; }
+  setExploded(true); score = 0; $('game').setAttribute('aria-pressed','true'); newRound();
+});
+function newRound(){ const pool = ORDER.filter(k => k !== quiz); quiz = pool[Math.floor(Math.random()*pool.length)]; $('quiz').className = 'quiz show'; $('quiz').innerHTML = ''; $('quiz').append('Toque no: ' + PARTS[quiz].name); const s = document.createElement('small'); s.textContent = `Acertos: ${score}`; $('quiz').append(s); }
+function answer(k){
+  if(!quiz) return false;
+  if(k === quiz){ score++; $('quiz').className = 'quiz show good'; $('quiz').textContent = 'Isso aí! Você achou: ' + PARTS[k].name + '!'; choose(k); setTimeout(() => { if(quiz) newRound(); }, 2400); }
+  else { $('quiz').className = 'quiz show'; $('quiz').textContent = 'Quase! Esse é: ' + PARTS[k].name + '. Procure: ' + PARTS[quiz].name; }
+  return true;
+}
+paintProgress(); show(location.hash.slice(1)); seen.delete('');
+
+/* ------------------------------------------------------------------ 3D */
+function initThree(){
+  const cv = $('cv'), stage = $('stage');
+  const renderer = new THREE.WebGLRenderer({canvas:cv, antialias:true, alpha:true});
+  renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
+  renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  const scene = new THREE.Scene(), cam = new THREE.PerspectiveCamera(36, 1, .1, 120);
+  scene.add(new THREE.HemisphereLight(0xfffbea, 0x6f8f5a, .42));
+  const sun = new THREE.DirectionalLight(0xfff1d0, .58); sun.position.set(4,9,5); sun.castShadow = true; sun.shadow.mapSize.set(1536,1536); Object.assign(sun.shadow.camera, {left:-8,right:8,top:8,bottom:-8,near:.5,far:30}); sun.shadow.bias = -.0006; sun.shadow.radius = 3; scene.add(sun);
+  const gm = new THREE.DataTexture(new Uint8Array([105,185,255]), 3, 1, THREE.LuminanceFormat); gm.minFilter = gm.magFilter = THREE.NearestFilter; gm.needsUpdate = true;
+  const T = (c, o) => new THREE.MeshToonMaterial(Object.assign({color:c, gradientMap:gm, transparent:true}, o||{}));
+
+  // cenário: gramado, terreiro, morros, árvore, mandacaru, sombra macia
+  const deco = [];
+  const addDeco = (m, x,y,z) => { m.position.set(x,y,z); scene.add(m); deco.push(m); return m; };
+  const grass = new THREE.Mesh(new THREE.CircleGeometry(30, 64), T(0x9cc46a)); grass.rotation.x = -Math.PI/2; grass.receiveShadow = true; scene.add(grass);
+  const dirt = new THREE.Mesh(new THREE.CircleGeometry(4.2, 48), T(0xd9a86c)); dirt.rotation.x = -Math.PI/2; dirt.position.y = .005; dirt.scale.set(1.6,1,1); dirt.receiveShadow = true; scene.add(dirt);
+  [[-14,-16,7,0x8fb35f],[2,-22,9,0x88ad59],[16,-15,6,0x97b968]].forEach(([x,z,r,c]) => { const h = new THREE.Mesh(new THREE.SphereGeometry(r,24,12,0,Math.PI*2,0,Math.PI/2), T(c)); h.scale.y = .35; addDeco(h, x,0,z); });
+  addDeco(new THREE.Mesh(new THREE.CylinderGeometry(.18,.26,2.2,12), T(0x7a4f32)), -4.6,1.1,-5.2);
+  [[-4.6,2.6,-5.2,1.1],[-4,2.3,-4.8,.8],[-5.2,2.3,-5.5,.8],[-4.6,3.2,-5.3,.75]].forEach(([x,y,z,r]) => addDeco(new THREE.Mesh(new THREE.IcosahedronGeometry(r,1), T(0x6fa64a)), x,y,z));
+  const cact = (x,z,s) => { addDeco(new THREE.Mesh(new THREE.CylinderGeometry(.14*s,.16*s,1.6*s,10), T(0x5f8f4a)), x,.8*s,z);
+    addDeco(new THREE.Mesh(new THREE.CylinderGeometry(.09*s,.09*s,.6*s,8), T(0x5f8f4a)), x+.25*s,1.0*s,z); addDeco(new THREE.Mesh(new THREE.CylinderGeometry(.09*s,.09*s,.5*s,8), T(0x5f8f4a)), x-.24*s,1.15*s,z); };
+  cact(5.2,-4.4,1.2); cact(-6.5,-1.5,.9);
+  [[-4.4,-1.2],[-3.8,-4],[-1.2,-4.6],[4.6,-3.6]].forEach(([x,z]) => addDeco(new THREE.Mesh(new THREE.IcosahedronGeometry(.42,1), T(0x82b357)), x,.25,z));
+  const sc = document.createElement('canvas'); sc.width = sc.height = 128; const sx = sc.getContext('2d'); const gr = sx.createRadialGradient(64,64,4,64,64,62); gr.addColorStop(0,'rgba(60,35,20,.55)'); gr.addColorStop(1,'rgba(60,35,20,0)'); sx.fillStyle = gr; sx.fillRect(0,0,128,128);
+  const shadow = new THREE.Mesh(new THREE.PlaneGeometry(6.4,3.2), new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(sc), transparent:true, depthWrite:false, opacity:.6})); shadow.rotation.x = -Math.PI/2; shadow.position.y = .01; scene.add(shadow);
+
+  // peças
+  const groups = {}, meshes = [], guides = [];
+  ORDER.forEach(k => { const g = new THREE.Group(); g.userData.part = k; scene.add(g); groups[k] = g; });
+  const EX = {carroceria:[-.3,2.7,0], chassi:[0,0,0], motor:[.2,1.35,0], radiador:[1.6,.75,0], bateria:[.6,1.1,1.5], farol:[2.6,.85,0], retrovisor:[.3,1.0,0], eixo:[-.6,0,0], freio:[.5,.25,0], rodas:[0,0,0]};
+  const guideMat = new THREE.LineDashedMaterial({color:0x3a2a22, dashSize:.12, gapSize:.09, transparent:true, opacity:0});
+  function add(k, geo, c, x,y,z, opt){
+    opt = opt || {};
+    const m = new THREE.Mesh(geo, T(c, opt.mat)); m.position.set(x,y,z); if(opt.rot) m.rotation.set(...opt.rot);
+    geo.computeBoundingBox(); const sz = geo.boundingBox.getSize(new THREE.Vector3());
+    const ol = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({color:0x3a2a22, side:THREE.BackSide, transparent:true}));
+    const olS = 1 + Math.min(.1, .022/Math.max(.08, Math.min(sz.x||1, sz.y||1, sz.z||1))); ol.scale.setScalar(olS); if(!opt.noOutline) m.add(ol); else ol.visible = false; m.userData.ol = ol; m.userData.olS = olS;
+    m.userData.k = k; m.userData.alpha = opt.alpha != null ? opt.alpha : (opt.glass ? .8 : 1); m.material.opacity = m.userData.alpha;
+    m.castShadow = !opt.glass && !opt.noShadow; m.receiveShadow = true; m.userData.cast = m.castShadow;
+    if(opt.parent){ opt.parent.add(m); m.userData.child = true; meshes.push(m); return m; }
+    const e = EX[k]; m.userData.base = m.position.clone(); m.userData.ex = new THREE.Vector3(e[0], e[1], e[2] + (opt.side || 0));
+    m.userData.glass = !!opt.glass;
+    groups[k].add(m); meshes.push(m);
+    if(opt.guide && m.userData.ex.lengthSq() > 0){ const lg = new THREE.BufferGeometry().setFromPoints([m.userData.base.clone(), m.userData.base.clone()]); const ln = new THREE.Line(lg, guideMat); ln.userData = {m}; scene.add(ln); guides.push(ln); }
+    return m;
+  }
+  const Bx = (w,h,d) => new THREE.BoxGeometry(w,h,d), Cy = (r,h,s) => new THREE.CylinderGeometry(r,r,h,s||28);
+  const RED = 0xc4161c, CHROME = 0xd9dde0, DARK = 0x2a2a2a, Z = [Math.PI/2,0,0], X = [0,0,Math.PI/2];
+
+  // cabine + capô: perfil lateral extrudado, com quinas arredondadas
+  const prof = new THREE.Shape();
+  [[2.5,.86],[2.5,1.36],[2.4,1.46],[1.28,1.5],[1.16,1.56],[.98,2.16],[.3,2.2],[.2,2.12],[.18,.86]].forEach(([x,y],i) => i ? prof.lineTo(x,y) : prof.moveTo(x,y));
+  const cabGeo = new THREE.ExtrudeGeometry(prof, {depth:1.78, bevelEnabled:true, bevelThickness:.04, bevelSize:.04, bevelSegments:3}); cabGeo.translate(0,0,-.89);
+  add('carroceria', cabGeo, RED, 0,0,0, {guide:true});
+  // vidros
+    add('carroceria', Bx(.03,.56,1.62), 0x9fc8de, 1.115,1.865,0, {rot:[0,0,.29], mat:{opacity:.8}, glass:true}); // para-brisa acompanha a inclinação da cabine
+  [.93,-.93].forEach(z => add('carroceria', Bx(.66,.44,.03), 0x9fc8de, .62,1.86,z, {mat:{opacity:.8}, glass:true}));
+  // caçamba
+  add('carroceria', Bx(2.6,.1,1.86), 0x8a5a3a, -1.15,1.0,0);
+  [.9,-.9].forEach(z => { add('carroceria', Bx(2.6,.56,.08), RED, -1.15,1.3,z); add('carroceria', Bx(2.64,.06,.12), RED, -1.15,1.6,z); });
+  add('carroceria', Bx(.08,.56,1.88), RED, -2.44,1.3,0);
+  // para-lamas (meio cilindro sobre as rodas)
+  [[1.75,.98],[1.75,-.98],[-1.55,.98],[-1.55,-.98]].forEach(([x,z]) => add('carroceria', new THREE.CylinderGeometry(.56,.56,.36,24,1,true,-Math.PI/2,Math.PI), RED, x,.5,z, {rot:[-Math.PI/2,0,0], mat:{side:THREE.DoubleSide}}));
+  // grade, para-choques e retrovisores
+  add('carroceria', Bx(.05,.44,1.24), 0x111111, 2.53,1.12,0); // grade preta
+  for(let i=0;i<4;i++) add('carroceria', Bx(.06,.03,1.24), 0x1c1c1c, 2.55,.96+i*.1,0);
+  add('carroceria', Bx(.14,.16,2.0), CHROME, 2.58,.8,0);
+  add('carroceria', Bx(.12,.14,1.98), CHROME, -2.52,.86,0);
+
+  // chassi
+  [.5,-.5].forEach(z => add('chassi', Bx(4.9,.14,.14), 0x4a4a4a, 0,.66,z));
+  [-2.1,-.9,.4,1.5,2.3].forEach(x => add('chassi', Bx(.12,.12,.98), 0x4a4a4a, x,.66,0));
+  // motor 261 seis em linha: bloco, cabeçote, tampa de válvulas, velas, distribuidor, polias, alternador, coletores
+  const BLUE = 0x2f6db0, BLUE2 = 0x285f9c;
+  const block = add('motor', Bx(1.0,.42,.46), BLUE, 1.6,.99,0, {guide:true});
+  add('motor', Bx(.92,.12,.4), 0x3a3a3a, 1.6,.72,0);                    // cárter
+  const head = add('motor', Bx(1.02,.1,.44), BLUE2, 1.6,1.25,0);          // cabeçote
+  const cover = add('motor', Bx(.98,.1,.3), BLUE, 1.6,1.35,.02);           // tampa de válvulas
+  for(let i=0;i<5;i++) add('motor', Bx(.012,.02,.26), 0x1f4f86, -.36+i*.18,.06,0, {parent:cover, noOutline:true});
+  const plugs = []; for(let i=0;i<6;i++) plugs.push(add('motor', Cy(.018,.09,8), 0xf3efe6, 1.2+i*.16,1.25,-.25, {rot:[-.9,0,0], noOutline:true}));
+  add('motor', Cy(.06,.1,14), 0x1a1a1a, .88+.3,1.1,-.34); // distribuidor
+  plugs.forEach((p,i) => { const c = new THREE.CatmullRomCurve3([new THREE.Vector3(1.2+i*.16,1.3,-.29), new THREE.Vector3(1.2+i*.16,1.36,-.36), new THREE.Vector3(1.18,1.2,-.38)]);
+    add('motor', new THREE.TubeGeometry(c, 12, .008, 5, false), 0x111111, 0,0,0, {noOutline:true, noShadow:true}); });
+  add('motor', Cy(.15,.1,22), 0x9aa3ad, 1.5,1.45,.05);                     // filtro de ar
+  add('motor', Cy(.07,.08,14), 0x8a8f95, 1.5,1.37,.05);                    // carburador
+  add('motor', Bx(.8,.06,.08), 0x9aa0a6, 1.55,1.12,.27);                    // coletor de admissão
+  add('motor', Cy(.045,.95,10), 0x9c5a35, 1.6,.92,-.32, {rot:X});           // coletor de escape
+  for(let i=0;i<6;i++) add('motor', Cy(.025,.12,8), 0x9c5a35, 1.2+i*.16,.99,-.27, {rot:Z, noOutline:true});
+  add('motor', Cy(.09,.15,16), 0x9aa3ad, 2.0,1.12,.3, {rot:X});             // alternador
+  add('motor', Cy(.1,.05,20), 0x333333, 2.13,.84,0, {rot:X, noOutline:true}); // polia do virabrequim
+  const belt = new THREE.CatmullRomCurve3([[2.15,.95,-.05],[2.15,1.18,-.02],[2.15,1.2,.3],[2.15,1.03,.34],[2.15,.76,.05],[2.15,.78,-.08]].map(p => new THREE.Vector3(...p)), true);
+  add('motor', new THREE.TubeGeometry(belt, 40, .016, 5, true), 0x111111, 0,0,0, {noOutline:true, noShadow:true}); // correia
+  add('motor', Bx(.34,.34,.38), BLUE, .95,.96,0);                          // caixa de marcha
+  add('motor', Cy(.2,.12,22), 0x3a3a3a, 1.08,.97,0, {rot:X});              // capa da embreagem
+  // por dentro: pistões, bielas, virabrequim e faíscas (aparecem quando o motor abre)
+  const crank = add('motor', Cy(.035,1.0,10), 0x8a8a8a, 1.6,.83,0, {rot:X, noOutline:true}); crank.rotation.order = 'ZYX';
+  const pistons = [], rods = [], fires = [];
+  for(let i=0;i<6;i++){
+    const x = 1.2+i*.16;
+    pistons.push(add('motor', Cy(.068,.1,16), 0xc9ced4, x,1.07,0, {noOutline:true}));
+    rods.push(add('motor', Bx(.03,.2,.04), 0x7d7d7d, x,.95,0, {noOutline:true}));
+    fires.push(add('motor', new THREE.SphereGeometry(.05,10,8), 0xffc21a, x,1.19,0, {noOutline:true, noShadow:true, alpha:0, mat:{emissive:0xffa000, emissiveIntensity:1}}));
+    fires[i].userData.fire = true;
+  }
+  const fan = add('motor', Cy(.06,.08,12), 0x555555, 2.22,1.08,0, {rot:X}); fan.rotation.order = 'ZYX';
+  for(let i=0;i<4;i++){ const a = i*Math.PI/2; const bl = add('motor', Bx(.08,.015,.26), 0x8a8a8a, Math.sin(a)*.15,0,Math.cos(a)*.15, {parent:fan}); bl.rotation.y = a; }
+  // radiador
+  add('radiador', Bx(.1,.6,1.08), 0x3b3b3b, 2.36,1.08,0, {guide:true});
+  for(let i=0;i<8;i++) add('radiador', Bx(.11,.02,1.08), 0x9a9a9a, 2.36,.85+i*.065,0);
+  const waterCurve = new THREE.CatmullRomCurve3([[1.9,1.27,.18],[2.12,1.38,.3],[2.33,1.34,.34],[2.41,1.08,.46],[2.33,.82,.34],[2.12,.8,.12],[1.95,.9,-.02],[1.85,1.08,.08]].map(p => new THREE.Vector3(...p)), true);
+  add('radiador', new THREE.TubeGeometry(waterCurve, 80, .032, 8, true), 0x1a1a1a, 0,0,0, {noShadow:true, noOutline:true, alpha:.55});
+  // bateria
+  add('bateria', Bx(.32,.28,.22), 0x222222, 1.8,1.1,.7, {guide:true});
+  add('bateria', Cy(.04,.07,12), RED, 1.72,1.27,.7); add('bateria', Cy(.04,.07,12), 0x666666, 1.88,1.27,.7);
+  const wireA = new THREE.CatmullRomCurve3([[1.72,1.31,.7],[1.98,1.4,.72],[2.36,1.27,.74],[2.52,1.15,.7]].map(p => new THREE.Vector3(...p)));
+  const wireB = new THREE.CatmullRomCurve3([[2.36,1.27,.74],[2.46,1.0,.35],[2.46,1.0,-.35],[2.52,1.15,-.7]].map(p => new THREE.Vector3(...p)));
+  [wireA, wireB].forEach(c => add('bateria', new THREE.TubeGeometry(c, 40, .014, 6, false), 0x111111, 0,0,0, {noShadow:true, noOutline:true}));
+  // faróis
+  const coneGeo = new THREE.ConeGeometry(.55, 2.6, 24, 1, true); coneGeo.translate(0,-1.3,0);
+  const cones = [];
+  [.7,-.7].forEach(z => { const hl = add('farol', Cy(.15,.07), 0xfff2b0, 2.56,1.15,z, {rot:X, mat:{emissive:0xffd36b, emissiveIntensity:.25}, guide:true});
+    cones.push(add('farol', coneGeo, 0xfff3b0, 0,0,0, {parent:hl, alpha:.22, noOutline:true, noShadow:true, mat:{side:THREE.DoubleSide, depthWrite:false}})); add('farol', new THREE.TorusGeometry(.16,.025,8,24), CHROME, 2.6,1.15,z, {rot:[0,Math.PI/2,0]}); });
+  // retrovisores: braço, espelho e o "cone de visão" para trás
+  const views = [];
+  [1,-1].forEach(s => {
+    add('retrovisor', Cy(.02,.22,8), DARK, 1.06,1.68,s*1.0, {rot:Z, side:s*.7});
+    const head = add('retrovisor', Bx(.06,.26,.17), DARK, 1.05,1.8,s*1.12, {side:s*.7, guide:true});
+    add('retrovisor', Bx(.012,.21,.13), 0xbfe3f5, -.034,0,0, {parent:head, mat:{emissive:0x9fd8ff, emissiveIntensity:.15}, noOutline:true});
+    const v = add('retrovisor', new THREE.ConeGeometry(.32, 1.7, 20, 1, true).translate(0,-.85,0), 0xbfe3f5, -.03,0,0, {parent:head, alpha:.16, noOutline:true, noShadow:true, mat:{side:THREE.DoubleSide, depthWrite:false}});
+    v.rotation.z = -Math.PI/2; v.rotation.x = s*.12; views.push(v);
+  });
+  // cardã e diferencial
+  const shaft = add('eixo', Cy(.06,2.3,14), 0x777777, -.3,.58,0, {rot:X}); shaft.rotation.order = 'ZYX';
+  [1.08,-1.08].forEach(y => add('eixo', Bx(.12,.1,.12), 0x4f4f4f, 0,y,0, {parent:shaft}));
+  add('eixo', new THREE.SphereGeometry(.22,20,14), 0x5a5a5a, -1.55,.45,0, {guide:true});
+  add('eixo', Cy(.07,1.7,14), 0x666666, -1.55,.45,0, {rot:Z});
+  // freios
+  const discs = [], calipers = [];
+  [1,-1].forEach(s => { const d = add('freio', Cy(.3,.04), 0xc8c8c8, 1.75,.45,s*.8, {rot:Z, side:s*.9, guide:true}); discs.push(d);
+    for(let i=0;i<5;i++){ const a = i/5*Math.PI*2; add('freio', Cy(.035,.05,10), 0x9a9a9a, Math.cos(a)*.2,0,Math.sin(a)*.2, {parent:d}); }
+    calipers.push(add('freio', Bx(.16,.22,.1), RED, 1.98,.56,s*.8, {side:s*.9})); });
+  // rodas (pneu com textura de banda de rodagem)
+  const tc = document.createElement('canvas'); tc.width = 64; tc.height = 16; const tx = tc.getContext('2d');
+  tx.fillStyle = '#262626'; tx.fillRect(0,0,64,16); tx.fillStyle = '#4a4a4a'; for(let i=0;i<8;i++) tx.fillRect(i*8+1,0,3,16);
+  const tread = new THREE.CanvasTexture(tc); tread.wrapS = tread.wrapT = THREE.RepeatWrapping; tread.repeat.set(10,1);
+  const tires = [], hubs = [];
+  [[1.75,1],[1.75,-1],[-1.55,1],[-1.55,-1]].forEach(([x,z]) => { const s = Math.sign(z);
+    const tire = add('rodas', new THREE.TorusGeometry(.33,.14,12,32), 0xffffff, x,.45,z, {side:s*1.9, guide:true, mat:{map:tread}}); tires.push(tire);
+    const hub = add('rodas', Cy(.25,.24), 0x2b2b2b, x,.45,z, {rot:Z, side:s*1.9}); hubs.push(hub);
+    add('rodas', Cy(.11,.27), CHROME, 0,0,0, {parent:hub});
+    for(let i=0;i<5;i++){ const a = i/5*Math.PI*2; add('rodas', Cy(.025,.3,8), CHROME, Math.cos(a)*.17,0,Math.sin(a)*.17, {parent:hub}); } });
+  // feixes de mola (no chassi)
+  [1.75,-1.55].forEach(x => [.5,-.5].forEach(z => [[1.1,.56],[.86,.52],[.62,.48]].forEach(([w,y]) => add('chassi', Bx(w,.035,.1), 0x3d3d3d, x,y,z))));
+
+  // partículas: água no radiador e energia nos fios
+  const dotGeo = new THREE.SphereGeometry(.035, 8, 6);
+  function flow(n, color){ const im = new THREE.InstancedMesh(dotGeo, new THREE.MeshBasicMaterial({color, transparent:true}), n); im.instanceMatrix.setUsage(THREE.DynamicDrawUsage); im.visible = false; scene.add(im); return im; }
+  const water = flow(18, 0xffffff); water.material.depthTest = false; water.renderOrder = 5, sparks = flow(16, 0xffd23c); sparks.material.depthTest = false; sparks.renderOrder = 5;
+  const hot = new THREE.Color(0xe2462a), cold = new THREE.Color(0x2f8fd8);
+  for(let i=0;i<18;i++) water.setColorAt(i, hot.clone().lerp(cold, Math.min(1, Math.max(0, (i/18 - .3)/.4))));
+  const dm = new THREE.Matrix4(), dp = new THREE.Vector3();
+
+  // etiquetas
+  const centers = {};
+  ORDER.forEach(k => { const bx = new THREE.Box3(); groups[k].children.forEach(m => bx.expandByPoint(m.userData.base)); centers[k] = bx.getCenter(new THREE.Vector3()); });
+  centers.rodas.set(1.75,.45,1); centers.freio.set(1.8,.7,.8); centers.carroceria.set(.6,2.2,0); centers.chassi.set(-.5,.66,.5); centers.retrovisor.set(1.05,1.76,1.1);
+  const labelsEl = $('labels');
+  labelsEl.innerHTML = ORDER.map((k,i) => `<button class="lbl" type="button" data-k="${k}" tabindex="-1"><b>${i+1}</b>${PARTS[k].name}</button>`).join('');
+  const lbls = [...labelsEl.children];
+  labelsEl.addEventListener('click', e => { const b = e.target.closest('.lbl'); if(b && !answer(b.dataset.k)) choose(b.dataset.k); });
+
+  // câmera
+  const VIEW = {carroceria:[.45,1.2,7.2], chassi:[.75,1.15,8], motor:[.6,1.05,4.6], radiador:[.25,1.15,5.4], bateria:[1.15,1.1,5], farol:[.2,1.15,5.2], retrovisor:[1.05,1.25,3.0], eixo:[1.0,1.2,6.4], freio:[.9,1.1,5.6], rodas:[1.05,.75,10.5]};
+  let theta=.75, phi=1.2, dist=10, tTheta=theta, tPhi=phi, tDist=dist;
+  const target = new THREE.Vector3(0,.9,0), tTarget = target.clone();
+  let focusKey = null, explode = 0, tExplode = 0, idle = 0, open_ = 0;
+  function aim(){
+    if(focusKey){ const v = VIEW[focusKey], g = groups[focusKey].children.find(m => m.userData.ex).userData.ex;
+      const base = focusKey==='rodas' ? new THREE.Vector3(.1,.45,0) : focusKey==='freio' ? new THREE.Vector3(1.8,.5,0) : centers[focusKey];
+      tTarget.copy(base).addScaledVector(new THREE.Vector3(g.x, focusKey==='rodas' ? 0 : g.y, focusKey==='rodas'||focusKey==='freio' ? 0 : g.z), tExplode);
+      tTheta = v[0]; tPhi = v[1]; tDist = v[2] + tExplode*.4; }
+    else { tTarget.set(.8*tExplode, .9 + tExplode*1.2, 0); tTheta = .75 + tExplode*.55; tPhi = 1.2 - tExplode*.05; tDist = 10 + tExplode*3.2; }
+  }
+  function focus(k){
+    focusKey = k; aim(); idle = 0;
+    meshes.forEach(m => { const on = !k || m.userData.k === k; m.material.opacity = on ? m.userData.alpha : .12; m.material.depthWrite = on && m.userData.alpha > .5; m.userData.ol.visible = on && m.parent && !m.userData.noOl; m.castShadow = on && m.userData.cast; });
+    lbls.forEach(l => l.classList.toggle('on', l.dataset.k === k));
+    deco.forEach(d => { d.material.opacity = k ? .2 : 1; d.material.depthWrite = !k; });
+  }
+  function setExplode(on){ tExplode = on ? 1 : 0; aim(); }
+
+  // gestos
+  let drag = null, moved = 0, pinch = null, touched = false;
+  const hideHint = () => { if(!touched){ touched = true; $('hint').classList.add('gone'); } };
+  stage.addEventListener('pointerdown', e => { if(e.target.closest('button')) return; drag = {x:e.clientX, y:e.clientY}; moved = 0; });
+  stage.addEventListener('pointermove', e => { if(!drag || pinch) return; const dx = e.clientX-drag.x, dy = e.clientY-drag.y; moved += Math.abs(dx)+Math.abs(dy); if(moved > 8) hideHint(); tTheta -= dx*.008; tPhi = Math.min(1.45, Math.max(.35, tPhi - dy*.006)); drag = {x:e.clientX, y:e.clientY}; idle = 0; });
+  addEventListener('pointerup', () => drag = null);
+  stage.addEventListener('wheel', e => { e.preventDefault(); tDist = Math.min(18, Math.max(2.6, tDist*(1+e.deltaY*.001))); idle = 0; }, {passive:false});
+  stage.addEventListener('touchstart', e => { if(e.touches.length===2) pinch = Math.hypot(e.touches[0].clientX-e.touches[1].clientX, e.touches[0].clientY-e.touches[1].clientY); }, {passive:true});
+  stage.addEventListener('touchmove', e => { if(e.touches.length===2 && pinch){ const d = Math.hypot(e.touches[0].clientX-e.touches[1].clientX, e.touches[0].clientY-e.touches[1].clientY); tDist = Math.min(18, Math.max(2.6, tDist*pinch/d)); pinch = d; hideHint(); } }, {passive:true});
+  stage.addEventListener('touchend', e => { if(e.touches.length<2) pinch = null; });
+  const ray = new THREE.Raycaster(), ndc = new THREE.Vector2();
+  stage.addEventListener('click', e => {
+    if(e.target.closest('button') || moved > 8) return;
+    const r = cv.getBoundingClientRect(); ndc.set(((e.clientX-r.left)/r.width)*2-1, -((e.clientY-r.top)/r.height)*2+1);
+    ray.setFromCamera(ndc, cam);
+    const hit = ray.intersectObjects(meshes.filter(m => m.material.opacity > .5 || quiz), false)[0];
+    if(hit){ hideHint(); const k = hit.object.userData.k; if(!answer(k)) choose(k); }
+  });
+
+  function resize(){ const w = stage.clientWidth, h = stage.clientHeight; renderer.setSize(w, h, false); cam.aspect = w/h; cam.updateProjectionMatrix(); }
+  const ro = new ResizeObserver(resize); ro.observe(stage); resize();
+  const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const tmp = new THREE.Vector3(), tmp2 = new THREE.Vector3();
+  const DELAY = {carroceria:0, chassi:0, motor:.08, radiador:.14, farol:.2, bateria:.24, retrovisor:.27, eixo:.3, freio:.34, rodas:.4};
+  const LOFF = {retrovisor:[-56,-30], radiador:[-18,-26], farol:[26,10], chassi:[-30,26], eixo:[-24,-4], bateria:[10,-2], freio:[0,8], motor:[0,-8]};
+  let last = performance.now();
+  function loop(t){
+    const dt = Math.min(.05, (t-last)/1000); last = t;
+    const k = still ? 1 : .08;
+    explode += (tExplode - explode) * (still ? 1 : .06);
+    if(Math.abs(tExplode - explode) > .001 && focusKey) aim();
+    idle += dt; if(!focusKey && !drag && idle > 6 && !still) tTheta += dt*.12; // gira devagar quando ninguém mexe
+    theta += (tTheta-theta)*k; phi += (tPhi-phi)*k; dist += (tDist-dist)*k; target.lerp(tTarget, k);
+    const D = dist * Math.max(1, Math.pow(1.25/cam.aspect, .85));
+    cam.position.set(target.x + D*Math.sin(phi)*Math.cos(theta), target.y + D*Math.cos(phi), target.z + D*Math.sin(phi)*Math.sin(theta));
+    cam.lookAt(target);
+    const ease = explode*explode*(3-2*explode);
+    const EK = {}; ORDER.forEach(p => { const v = Math.min(1, Math.max(0, (explode - DELAY[p]) / .6)); EK[p] = still ? tExplode : v*v*(3-2*v); });
+    meshes.forEach(m => { if(!m.userData.child) m.position.copy(m.userData.base).addScaledVector(m.userData.ex, EK[m.userData.k]); });
+    // mecanismos vivos: cada peça mostra o que faz
+    const f = focusKey, tt = t/1000;
+    // motor aberto: cabeçote sobe, bloco fica transparente, pistões sobem e descem e as velas soltam faísca
+    open_ += ((f === 'motor' ? 1 : 0) - open_) * (still ? 1 : .07);
+    const lift = open_ * .32; head.position.y += lift; cover.position.y += lift; plugs.forEach(p => p.position.y += lift);
+    if(f === 'motor'){ block.material.opacity = 1 - open_*.8; block.material.depthWrite = open_ < .5; block.userData.ol.visible = open_ < .5; }
+    const ang = still ? 0 : tt*4.2; if(f === 'motor') crank.rotation.y = ang;
+    const ORDEM = [0,4,2,5,1,3]; // ignição 1-5-3-6-2-4
+    pistons.forEach((p,i) => {
+      const off = ORDEM[i] * (Math.PI*4/6);                  // dois giros do virabrequim por ciclo
+      const y = Math.cos(ang + off) * .07 * open_;
+      p.position.y += y; rods[i].position.y += y*.5;
+      const fire = Math.max(0, Math.cos((ang + off)/2)); const k2 = f === 'motor' ? Math.pow(fire, 40) * open_ : 0;
+      fires[i].material.opacity = k2; fires[i].scale.setScalar(.6 + k2); fires[i].position.y += lift;
+    });
+    if((f === 'motor' || f === 'radiador') && !still) fan.rotation.y += dt*14;
+    const roll = !still && (f === 'rodas' || f === 'eixo') ? dt*5 : 0;
+    hubs.forEach(h => h.rotation.y -= roll * Math.sign(h.position.z || 1)); tires.forEach(w => w.rotation.z -= roll);
+    if(f === 'eixo' && !still) shaft.rotation.y += dt*10;
+    const brake = f === 'freio' && !still ? (Math.sin(tt*2.2) > 0 ? 1 : 0) : 0;
+    discs.forEach(d => d.rotation.y += dt*(f === 'freio' && !still ? (brake ? 1.2 : 7) : 0));
+    calipers.forEach(c => c.position.x -= brake*.03);
+    const together = (p) => EK[p] < .05;
+    water.visible = f === 'radiador' && together('radiador') && !still;
+    if(water.visible){ for(let i=0;i<18;i++){ waterCurve.getPointAt(((i/18 + tt*.18) % 1), dp); dm.makeTranslation(dp.x, dp.y, dp.z); water.setMatrixAt(i, dm); } water.instanceMatrix.needsUpdate = true; }
+    sparks.visible = (f === 'bateria' || f === 'farol') && together('bateria') && together('farol') && !still;
+    if(sparks.visible){ for(let i=0;i<16;i++){ const c = i < 8 ? wireA : wireB; c.getPointAt(((i%8)/8 + tt*.5) % 1, dp); dm.makeTranslation(dp.x, dp.y, dp.z); sparks.setMatrixAt(i, dm); } sparks.instanceMatrix.needsUpdate = true; }
+    cones.forEach(c => c.visible = (f === 'farol' || f === 'bateria') && together('farol'));
+    views.forEach(v => v.visible = f === 'retrovisor');
+    guideMat.opacity = Math.max(0, (ease - .2) / .8) * (focusKey ? .35 : .7);
+    guides.forEach(g => { const m = g.userData.m; const a = g.geometry.attributes.position; a.setXYZ(0, m.userData.base.x, m.userData.base.y, m.userData.base.z); a.setXYZ(1, m.position.x, m.position.y, m.position.z); a.needsUpdate = true; g.computeLineDistances(); g.visible = ease > .05; });
+    shadow.material.opacity = 1 - ease*.4;
+    const pulse = still ? .7 : .55 + .35*Math.sin(t*.004);
+    meshes.forEach(m => { const p = m.userData.k, on = focusKey && p === focusKey, fl = p === 'farol' && m.geometry.type === 'CylinderGeometry';
+      if(m.geometry === coneGeo || m.userData.fire) return;
+      m.material.emissive.setHex(on ? 0xffe0a0 : (fl ? 0xffd36b : 0)); m.material.emissiveIntensity = fl && (focusKey === 'farol' || focusKey === 'bateria') ? 1 : (on ? pulse*.14 : (fl ? .25 : 0));
+      m.userData.ol.material.color.setHex(on ? 0xc4161c : 0x3a2a22); m.userData.ol.scale.setScalar(on && !m.userData.child ? 1 + Math.min((m.userData.olS-1)*1.8, .07) : m.userData.olS); });
+    const W = stage.clientWidth, H = stage.clientHeight;
+    lbls.forEach(l => { const kk = l.dataset.k, ex = groups[kk].children.find(m => m.userData.ex).userData.ex;
+      tmp2.set(ex.x, ex.y, kk==='rodas'||kk==='freio'||kk==='retrovisor' ? Math.sign(centers[kk].z)*Math.abs(ex.z) : ex.z);
+      tmp.copy(centers[kk]).addScaledVector(tmp2, EK[kk]).project(cam);
+      const vis = EK[kk] > .6 && tmp.z < 1 && (!focusKey || focusKey === kk);
+      l.style.opacity = vis ? 1 : 0; l.style.pointerEvents = vis ? 'auto' : 'none';
+      const o = focusKey ? [0,0] : (LOFF[kk] || [0,0]); const lw = l.offsetWidth/2 + 6;
+      const lx = Math.min(W - lw, Math.max(lw, (tmp.x*.5+.5)*W + o[0]));
+      l.style.transform = `translate(${lx.toFixed(1)}px,${((-tmp.y*.5+.5)*H + o[1]).toFixed(1)}px) translate(-50%,-140%)`; });
+    renderer.render(scene, cam); requestAnimationFrame(loop);
+  }
+  requestAnimationFrame(t => { last = t; loop(t); $('load').classList.add('gone'); });
+  return {focus, setExplode};
+}
+}
+</script>
+</body>
+</html>

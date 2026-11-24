@@ -25,7 +25,7 @@ h1{font:900 clamp(32px,6vw,50px)/1 "Big Shoulders Display",Impact,sans-serif;mar
 .bar{width:110px;height:10px;border-radius:99px;background:var(--line);overflow:hidden}.bar i{display:block;height:100%;width:0;background:var(--ok);transition:width .4s}
 .grid{display:grid;grid-template-columns:minmax(0,1fr);gap:14px;padding-bottom:24px}
 @media(min-width:960px){.grid{grid-template-columns:minmax(0,1.65fr) minmax(0,1fr);align-items:start}.side{position:sticky;top:12px}}
-.stage{position:relative;height:min(64vh,580px);min-height:330px;border-radius:22px;overflow:hidden;background:linear-gradient(#78b2e3 0%,#a8d2ef 42%,#e3efe1 66%,#f3e3bf 100%);touch-action:none;cursor:grab;user-select:none;box-shadow:0 1px 0 var(--line),0 10px 30px -18px #000a}
+.stage{position:relative;height:min(64vh,580px);min-height:330px;border-radius:22px;overflow:hidden;background:linear-gradient(#78b2e3 0%,#a8d2ef 42%,#e3efe1 66%,#f3e3bf 100%);touch-action:pan-y;cursor:grab;user-select:none;box-shadow:0 1px 0 var(--line),0 10px 30px -18px #000a}
 .stage:active{cursor:grabbing}
 .stage canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
 .cloud{position:absolute;background:#fff;border-radius:999px;opacity:.95}
@@ -81,6 +81,26 @@ button:focus-visible,.lbl:focus-visible,.chip:focus-visible{outline:3px solid #1
 .stage.fail .nogl{display:grid}.stage.fail .top,.stage.fail .hint,.stage.fail .load{display:none}
 footer{text-align:center;color:var(--muted);font-size:14px;padding:0 16px 24px}
 footer a{color:var(--red)}
+/* celular: palco menor para a ficha aparecer; Ouvir logo abaixo do título */
+@media(max-width:959px){
+  .stage{height:clamp(280px,46svh,460px);min-height:0}
+  .panel{display:flex;flex-direction:column}
+  .panel .eyebrow{order:1}.panel h2{order:2}.panel .actions{order:3;margin:0 0 14px}
+  .panel #ptext{order:4}.panel .fact{order:5}.panel .where{order:6}
+  .side{scroll-margin-top:8px}
+}
+@media(max-width:600px){
+  header{padding:8px 0 6px}
+  h1{font-size:34px}
+  .sub{font-size:14px}
+  .prog{width:100%}.bar{flex:1}
+  .panel{padding:16px 16px 12px}
+  .panel h2{font-size:34px;margin-bottom:8px}
+  .hint{white-space:normal;width:max-content;max-width:calc(100% - 24px);text-align:left;line-height:1.3}
+  .panel p{font-size:17px}
+}
+.zhint{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);background:#2a211bd9;color:#fffdf7;font-size:15px;padding:10px 16px;border-radius:12px;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap}
+.zhint.show{opacity:1}
 @media(max-width:600px){.lbl{font-size:12px;padding:4px 8px 4px 4px}.lbl b{width:18px;height:18px;font-size:10px}.seg button{padding:6px 10px;font-size:15px}}
 @media(prefers-reduced-motion:reduce){.cloud{animation:none;left:10%}.hint svg{animation:none}.bar i{transition:none}}
 </style>
@@ -109,6 +129,7 @@ footer a{color:var(--red)}
         </div>
         <div class="quiz" id="quiz" role="status"></div>
         <div class="hint" id="hint"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11V5a2 2 0 0 1 4 0v6"/><path d="M13 9a2 2 0 0 1 4 0v4a6 6 0 0 1-6 6h-1a5 5 0 0 1-4-2l-2.5-3.5a1.8 1.8 0 0 1 2.8-2.2L9 13"/></svg>Arraste para girar · toque numa peça</div>
+        <div class="zhint" id="zhint">Segure Ctrl e role para aproximar</div>
         <div class="load" id="load">Abrindo a oficina…</div>
         <div class="nogl">Seu aparelho não conseguiu abrir o 3D. As explicações das peças continuam aqui embaixo.</div>
       </div>
@@ -453,7 +474,13 @@ function initThree(){
   stage.addEventListener('pointerdown', e => { if(e.target.closest('button')) return; drag = {x:e.clientX, y:e.clientY}; moved = 0; });
   stage.addEventListener('pointermove', e => { if(!drag || pinch) return; const dx = e.clientX-drag.x, dy = e.clientY-drag.y; moved += Math.abs(dx)+Math.abs(dy); if(moved > 8) hideHint(); tTheta -= dx*.008; tPhi = Math.min(1.45, Math.max(.35, tPhi - dy*.006)); drag = {x:e.clientX, y:e.clientY}; idle = 0; });
   addEventListener('pointerup', () => drag = null);
-  stage.addEventListener('wheel', e => { e.preventDefault(); tDist = Math.min(18, Math.max(2.6, tDist*(1+e.deltaY*.001))); idle = 0; }, {passive:false});
+  stage.addEventListener('pointercancel', () => drag = null);
+  /* no toque, o dedo na vertical rola a página; girar é deslizando para o lado */
+  if(matchMedia('(pointer:coarse)').matches){ const h = $('hint'); for(const n of h.childNodes) if(n.nodeType===3 && /Arraste/.test(n.textContent)) n.textContent = ' Deslize de lado para girar · toque numa peça'; } /* o navegador assumiu a rolagem da página */
+  let zt = 0;
+  stage.addEventListener('wheel', e => {
+    if(!e.ctrlKey && !e.metaKey){ const z = $('zhint'); z.classList.add('show'); clearTimeout(zt); zt = setTimeout(() => z.classList.remove('show'), 1200); return; }
+    e.preventDefault(); tDist = Math.min(18, Math.max(2.6, tDist*(1+e.deltaY*.001))); idle = 0; }, {passive:false});
   stage.addEventListener('touchstart', e => { if(e.touches.length===2) pinch = Math.hypot(e.touches[0].clientX-e.touches[1].clientX, e.touches[0].clientY-e.touches[1].clientY); }, {passive:true});
   stage.addEventListener('touchmove', e => { if(e.touches.length===2 && pinch){ const d = Math.hypot(e.touches[0].clientX-e.touches[1].clientX, e.touches[0].clientY-e.touches[1].clientY); tDist = Math.min(18, Math.max(2.6, tDist*pinch/d)); pinch = d; hideHint(); } }, {passive:true});
   stage.addEventListener('touchend', e => { if(e.touches.length<2) pinch = null; });

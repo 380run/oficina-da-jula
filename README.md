@@ -34,7 +34,9 @@ Acrescente o nome da peça depois de `#`:
 
 ## Narração
 
-Veja `roteiros.md`: são 11 textos (apresentação + 10 peças) para gerar no ElevenLabs. Salve os MP3 em `audio/` com os nomes indicados (`intro.mp3`, `motor.mp3`…). Nada mais precisa mudar no código.
+Os 11 áudios em `audio/` (apresentação + 10 peças) foram gerados com a voz neural brasileira **Francisca** (Microsoft, `pt-BR-FranciscaNeural`, velocidade −8%), a partir dos textos `say` do `index.html`. Os roteiros estão em `roteiros.md`.
+
+Para trocar uma narração, substitua o MP3 com o mesmo nome (`intro.mp3`, `motor.mp3`…). Se algum arquivo faltar, a página usa a voz do aparelho só para aquela peça.
 
 ---
 Modelo ilustrativo, fora de escala. Textos e projeto: Projeto Jula · Bruno Azevedo.
